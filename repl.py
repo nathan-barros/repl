@@ -60,15 +60,11 @@ def help() -> None:
 
         reset()             Remove all but protected & default global variables
 
-        clrscr()            Erase the entire terminal screen & scrollback
+        clear()            Erase the entire terminal screen & scrollback
 
         protect()           Protect a global variable from being reset
 
         unprotect()         Remove a global variable's protected status
-
-        save(filepath)      Save the interactive code to the given file
-
-        load(filepath)      Load a python file into namespace
 
         lsglob()            List all global variables and their type
 
