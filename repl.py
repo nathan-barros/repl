@@ -1,11 +1,12 @@
 """
 Module:        repl.py
-Description:   Provides conveinent functions for interactive sessions
+Description:   Provides conveinent functions for interactive 
+               python (repl) sessions in ANSI terminals.
 
 Author:        Nathan W. Barros
 Date Created:  2026-10-13 21:37:01
-Last Modified: 2026-10-13 21:37:20
-Version:       1.0.0
+Last Modified: 2026-10-27 16:18:35
+Version:       1.0.1
 License:       MIT License
 Dependencies:  psutil
 
@@ -15,14 +16,8 @@ Usage:
     >>> repl.help()
 """
 
-# FUTURE COMMAND IDEAS
-# 1. repl.lsprot()       -> list custom protected variables
-# 2. repl.protect(str)   -> protect variable from being reset
-# 3. repl.unprotect(str) -> remove variable from protection list
-# 4. repl.free(obj)      -> free up memory from a object
-
 __author__ = "Nathan W. Barros"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 
 
@@ -30,7 +25,6 @@ __version__ = "1.0.0"
 import sys
 if not hasattr(sys, "ps1") and not sys.flags.interactive:
     raise ImportError( "repl is only for interactive sessions.")
-import gc
 
 # Check 3rd party dependency
 try:
@@ -59,48 +53,45 @@ _BOXES = (list, tuple, set, frozenset)
 
 def help() -> None:
     doc = """
-    the repl module provides...
-    ===============================================================
+    REPL
+    ===========================================================================
 
-        help()              Display this help message.
+        help()              Display this message
 
-        reset()             Reset the workspace: clear the screen
-                            and remove user-defined global names
+        reset()             Remove all but protected & default global variables
 
-        clrscr()            Clear the terminal screen completely.
+        clrscr()            Erase the entire terminal screen & scrollback
 
-        protect()           Protect a global from reset()
+        protect()           Protect a global variable from being reset
 
-        unprotect()         Make a global vulnerable to reset()
+        unprotect()         Remove a global variable's protected status
 
-        save(filepath)      Save interactive code to given file
+        save(filepath)      Save the interactive code to the given file
 
         load(filepath)      Load a python file into namespace
 
-        lsglob()            List all global names and their type.
+        lsglob()            List all global variables and their type
 
-        lsprot()            ...
+        lsprot()            List all protected variables and their type
 
-        lsfunc()            List all user-defined functions.
+        lsfunc()            List all user-defined functions
 
-        lsvars()            List all user-defined variables.
+        lsvars()            List all user-defined variables
 
-        lsmods()            List all imported modules.
+        lsmods()            List all imported modules
 
-        lsmem(verbose)      Report memory usage. if verbose
-                            list ~usage of each global variable
+        lsmem(verbose)      List memory usage; verbose: include every variable
 
         Notes
-        ------------------------------------------------------------
-        > This module is only available within interactive python
-        sessions and throws an ImportError if used incorrectly.
-        > This module will not function if [from repl import *] is
-        used as repl.reset() removes all globals. This is intended
-        behavior. Use [import repl] instead.
+        -----------------------------------------------------------------------
+        > REPL is only available during interactive python sessions
+        > REPL does not support [import *]; use [import repl] instead
     """
     print(doc)
 
 def reset() -> None:
+    """ Reset global variables except initial & protected """
+
     ns = _ns()
     default_globs   = {glob: ns[glob] for glob in _DEFAULT_GLOBS if glob in ns}
     protected_globs = {glob: ns[glob] for glob in _PROTECTED_GLOBS if glob in ns}
@@ -109,7 +100,9 @@ def reset() -> None:
     ns.update(default_globs)
     ns.update(protected_globs)
 
-def clrscr() -> None:
+def clear() -> None:
+    """ Clear the ANSI terminal screen """
+
     sys.stdout.write(
             "\033[1;1H" # cursor to top left
             "\033[2J"   # clear screen 
@@ -124,12 +117,16 @@ def unprotect(name: str) -> None:
     _PROTECTED_GLOBS.remove(name)
 
 def lsglob() -> None:
+    """ display global vars with types to terminal """
+
     print(f"{'Name':<20} {'Type':<20}", "-"*40, sep="\n")
     for name, obj in sorted(_ns().items()):
         obj_type = type(obj).__name__ if name not in _DEFAULT_GLOBS else "default"
         print(f"{name:<20} {obj_type:<20}")
 
 def lsprot() -> None:
+    """ display protected vars with types to terminal"""
+
     ns = _ns()
     pdict = {glob: ns[glob] for glob in _PROTECTED_GLOBS if glob in ns}
 
@@ -139,6 +136,8 @@ def lsprot() -> None:
     
 
 def lsfunc() -> None:
+    """ display user-defined functions to terminal """
+
     print("Functions", "-"*40, sep="\n")
     for name, obj in sorted(_ns().items()):
         if name in _DEFAULT_GLOBS: continue
@@ -147,6 +146,8 @@ def lsfunc() -> None:
 
 
 def lsvars() -> None:
+    """ display user-defined variables with type to terminal """
+
     print("Variables", "-"*40, sep="\n")
     for name, obj in sorted(_ns().items()):
         if name in _DEFAULT_GLOBS: continue
@@ -156,6 +157,8 @@ def lsvars() -> None:
 
 
 def lsmods() -> None:
+    """ display user-imported modules to terminal """
+
     print("Modules", "-"*40, sep="\n")
     for name, obj in sorted(_ns().items()):
         if name in _DEFAULT_GLOBS: continue
@@ -213,6 +216,7 @@ def _ns() -> dict:
 
 def _mem_table(title, rows) -> None:
     """Display a table for lsmem() command output"""
+
     print(
         f"\n{title}\n"
         f"{'Name':<24}{'Type':<14}{'Size':>12}\n"
@@ -221,6 +225,8 @@ def _mem_table(title, rows) -> None:
         print(f"{name:<24}{type_:<14}{_humanize_bytes(size):>12}")
 
 def _humanize_bytes(size: int) -> str:
+    """ convert bytes into human readable str """
+
     for unit in ("bytes", "KiB", "MiB", "GiB"):
         if size < 1024 or unit == "GiB":
             return f"{size:.1f} {unit}" if unit != "bytes" else f"{size} bytes"
